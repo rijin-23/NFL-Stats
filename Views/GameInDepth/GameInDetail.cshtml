@@ -126,10 +126,10 @@
         /* Comments Section Styling */
         .comments-section {
             margin-top: 30px;
-            padding: 25px;
+            padding: 20px;
             background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .comments-section h2 {
@@ -142,8 +142,14 @@
         }
 
         .comment {
-            padding: 15px 0;
-            border-bottom: 1px solid #edf2f7;
+            margin-bottom: 20px;
+        }
+
+        .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
         }
 
         .comment strong {
@@ -155,6 +161,50 @@
             color: #4a5568;
             margin: 8px 0;
         }
+        .comment-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .comment-date {
+        color: #666;
+        font-size: 0.9em;
+    }
+
+    .comment-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .comment-text {
+        margin: 10px 0;
+        color: #333;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+        padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+        
+    }
 
         .btn-primary {
             background-color: #4299e1;
@@ -264,14 +314,13 @@
                 <canvas id="quarterlyScoreChart_@game.gameID"></canvas>
             </div>
 
-            <div class="comments-section">
+<div class="comments-section">
     <h2>Comments</h2>
     
-    <!-- Button to redirect to the AddComment page with gameId -->
-<a asp-action="AddComment" asp-controller="Comment" asp-route-gameId="@game.gameID" class="btn-primary">
-    Add Comment
-</a>
-    <!-- Display Comments -->
+    <a asp-action="AddComment" asp-controller="Comment" asp-route-gameId="@game.gameID" class="btn btn-primary mb-4">
+        Add Comment
+    </a>
+
     <div class="comment-list">
         @if (TempData["Comments"] != null)
         {
@@ -287,8 +336,27 @@
                         foreach (var comment in comments)
                         {
                             <div class="comment">
-                                <p><strong>@comment.UserName</strong></p>
-                                <p>@comment.UserComment</p>
+                                <div class="comment-header">
+                                    <div class="comment-info">
+                                        <strong>@comment.UserName</strong>
+                                        <span class="comment-date">@comment.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                                    </div>
+                                    <div class="comment-actions">
+                                        <a asp-controller="Comment" asp-action="EditComment" 
+                                           asp-route-commentId="@comment.Id" asp-route-gameId="@game.gameID"
+                                           class="btn btn-sm btn-primary">Edit</a>
+                                        <form asp-controller="Comment" asp-action="DeleteComment" method="post" 
+                                              style="display: inline;">
+                                            <input type="hidden" name="commentId" value="@comment.Id" />
+                                            <input type="hidden" name="gameId" value="@game.gameID" />
+                                            <button type="submit" class="btn btn-sm btn-danger" 
+                                                    onclick="return confirm('Are you sure you want to delete this comment?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <p class="comment-text">@comment.UserComment</p>
                                 <hr />
                             </div>
                         }

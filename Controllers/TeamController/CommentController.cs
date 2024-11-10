@@ -11,51 +11,85 @@ namespace Project.Controllers
 
         public IActionResult AddComment(string gameId)
         {
-            if (string.IsNullOrEmpty(gameId))
-            {
-                return RedirectToAction("GameOverview", "GameOverview");
-            }
             ViewBag.GameId = gameId;
             return View();
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public IActionResult SubmitComment(string gameId, string userName, string userComment)
         {
-            // Validate gameId
-            if (string.IsNullOrEmpty(gameId))
-            {
-                return RedirectToAction("GameOverview", "GameOverview");
-            }
-
             if (!string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(userComment))
             {
                 var comment = new Comment 
                 { 
+                    Id = Guid.NewGuid().ToString(), // Add unique ID for each comment
                     UserName = userName,
-                    UserComment = userComment
+                    UserComment = userComment,
+                    CreatedAt = DateTime.Now
                 };
 
-                // Initialize list for game if it doesn't exist
                 if (!gameComments.ContainsKey(gameId))
                 {
                     gameComments[gameId] = new List<Comment>();
                 }
 
-                // Add comment to the specific game's list
                 gameComments[gameId].Add(comment);
-
-                // Store comments for this specific game in TempData
                 TempData["Comments"] = JsonConvert.SerializeObject(gameComments[gameId]);
 
-                // Redirect back to game details with the gameId
                 return RedirectToAction("GameInDetail", "GameInDepth", new { gameId });
             }
 
-            // If we get here, something went wrong. Return to form with the gameId
             ViewBag.GameId = gameId;
             return View("AddComment");
+        }
+
+        [HttpPost]
+        public IActionResult DeleteComment(string commentId, string gameId)
+        {
+            if (gameComments.ContainsKey(gameId))
+            {
+                var comment = gameComments[gameId].FirstOrDefault(c => c.Id == commentId);
+                if (comment != null)
+                {
+                    gameComments[gameId].Remove(comment);
+                    TempData["Comments"] = JsonConvert.SerializeObject(gameComments[gameId]);
+                }
+            }
+
+            return RedirectToAction("GameInDetail", "GameInDepth", new { gameId });
+        }
+
+        [HttpGet]
+        public IActionResult EditComment(string commentId, string gameId)
+        {
+            if (gameComments.ContainsKey(gameId))
+            {
+                var comment = gameComments[gameId].FirstOrDefault(c => c.Id == commentId);
+                if (comment != null)
+                {
+                    ViewBag.GameId = gameId;
+                    return View(comment);
+                }
+            }
+
+            return RedirectToAction("GameInDetail", "GameInDepth", new { gameId });
+        }
+
+        [HttpPost]
+        public IActionResult UpdateComment(string commentId, string gameId, string userName, string userComment)
+        {
+            if (gameComments.ContainsKey(gameId))
+            {
+                var comment = gameComments[gameId].FirstOrDefault(c => c.Id == commentId);
+                if (comment != null)
+                {
+                    comment.UserName = userName;
+                    comment.UserComment = userComment;
+                    TempData["Comments"] = JsonConvert.SerializeObject(gameComments[gameId]);
+                }
+            }
+
+            return RedirectToAction("GameInDetail", "GameInDepth", new { gameId });
         }
     }
 }
