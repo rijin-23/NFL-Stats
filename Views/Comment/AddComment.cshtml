@@ -1,0 +1,127 @@
+@model Project.Models.Comment
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>Add a Comment</h2>
+        </div>
+        <div class="card-body">
+            @if (ViewBag.GameId != null)
+            {
+                <form asp-action="SubmitComment" asp-controller="Comment" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="gameId" value="@ViewBag.GameId" />
+                    
+                    <div class="form-group mb-3">
+                        <label for="userName">Your Name</label>
+                        <input type="text" id="userName" name="userName" class="form-control" required />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="userComment">Comment</label>
+                        <textarea id="userComment" name="userComment" class="form-control" rows="4" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Submit Comment</button>
+                        <a asp-controller="GameInDepth" asp-action="GameInDetail" asp-route-gameId="@ViewBag.GameId" 
+                           class="btn btn-secondary">Back to Game</a>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <div class="alert alert-danger">
+                    Invalid game ID. <a asp-controller="GameOverview" asp-action="GameOverview">Return to Game Overview</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .card-header h2 {
+        margin: 0;
+        color: #333;
+        font-size: 1.5rem;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: none;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        margin-left: 10px;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+
+    .alert {
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+
+    .alert a {
+        color: #721c24;
+        font-weight: bold;
+    }
+</style>

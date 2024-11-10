@@ -1,0 +1,387 @@
+@model List<Project.Models.NFLGameData>
+@using Project.Models
+@{
+    Layout = "_Layout";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFL Game Details</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        h1 {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a365d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            margin: 2rem 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .game-card {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #edf2f7;
+        }
+
+        .game-header h2 {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 1.8rem;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .game-header p {
+            font-size: 1.1rem;
+            color: #718096;
+        }
+
+        .team-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .team {
+            flex: 1;
+            padding: 25px;
+            border-radius: 10px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid #edf2f7;
+            transition: transform 0.2s ease;
+        }
+
+        .team:hover {
+            transform: translateY(-2px);
+        }
+
+        .team h3 {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 1.5rem;
+            color: #1a365d;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .team .points {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .team p {
+            font-size: 1.1rem;
+            color: #4a5568;
+            margin: 8px 0;
+        }
+
+        .team-logo {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            margin: 0 auto 20px;
+            display: block;
+        }
+
+        .chart-container {
+            width: 100%;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Comments Section Styling */
+        .comments-section {
+            margin-top: 30px;
+            padding: 25px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .comments-section h2 {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 1.8rem;
+            color: #1a365d;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #edf2f7;
+        }
+
+        .comment {
+            padding: 15px 0;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .comment strong {
+            color: #2d3748;
+            font-size: 1.1rem;
+        }
+
+        .comment p {
+            color: #4a5568;
+            margin: 8px 0;
+        }
+
+        .btn-primary {
+            background-color: #4299e1;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #3182ce;
+        }
+
+        /* Stats Labels */
+        .stat-label {
+            font-weight: 500;
+            color: #718096;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #2d3748;
+        }
+    </style>
+</head>
+<body>
+    <h1>NFL Game Details</h1>
+
+    @foreach (var game in Model)
+    {
+        <div class="game-card">
+            <div class="game-header">
+                @{
+                    string formattedGameID = game.gameID;
+                    if (game.gameID.Length > 9)
+                    {
+                        formattedGameID = game.gameID.Substring(9).Replace("@", " vs ");
+                    }
+                }
+                <h2>@formattedGameID</h2>
+                <p>Status: @game.gameStatus | Date: @game.gameDate</p>
+            </div>
+
+            <div class="team-container">
+                <!-- Home Team Section -->
+                <div class="team">
+                    @{
+                        TeamFlags homeTeamFlag = null;
+                        var teamFlags = ViewBag.TeamFlags as List<TeamFlags>;
+                        if (teamFlags != null)
+                        {
+                            foreach (var flag in teamFlags)
+                            {
+                                if (flag.teamID == game.teamIDHome)
+                                {
+                                    homeTeamFlag = flag;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    @if (homeTeamFlag != null)
+                    {
+                        <img src="@homeTeamFlag.nflComLogo1" alt="@game.home logo" class="team-logo">
+                    }
+                    <h3>@game.home</h3>
+                    <p class="points">@game.homePts Points</p>
+                    <p><span class="stat-label">Total Yards:</span> <span class="stat-value">@game.teamStats.home.totalYards</span></p>
+                    <p><span class="stat-label">Rushing Yards:</span> <span class="stat-value">@game.teamStats.home.rushingYards</span></p>
+                    <p><span class="stat-label">Rushing Attempts:</span> <span class="stat-value">@game.teamStats.home.rushingAttempts</span></p>
+                </div>
+
+                <!-- Away Team Section -->
+                <div class="team">
+                    @{
+                        TeamFlags awayTeamFlag = null;
+                        if (teamFlags != null)
+                        {
+                            foreach (var flag in teamFlags)
+                            {
+                                if (flag.teamID == game.teamIDAway)
+                                {
+                                    awayTeamFlag = flag;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    @if (awayTeamFlag != null)
+                    {
+                        <img src="@awayTeamFlag.nflComLogo1" alt="@game.away logo" class="team-logo">
+                    }
+                    <h3>@game.away</h3>
+                    <p class="points">@game.awayPts Points</p>
+                    <p><span class="stat-label">Total Yards:</span> <span class="stat-value">@game.teamStats.away.totalYards</span></p>
+                    <p><span class="stat-label">Rushing Yards:</span> <span class="stat-value">@game.teamStats.away.rushingYards</span></p>
+                    <p><span class="stat-label">Rushing Attempts:</span> <span class="stat-value">@game.teamStats.away.rushingAttempts</span></p>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="chart-container">
+                <canvas id="quarterlyScoreChart_@game.gameID"></canvas>
+            </div>
+
+            <div class="comments-section">
+    <h2>Comments</h2>
+    
+    <!-- Button to redirect to the AddComment page with gameId -->
+<a asp-action="AddComment" asp-controller="Comment" asp-route-gameId="@game.gameID" class="btn-primary">
+    Add Comment
+</a>
+    <!-- Display Comments -->
+    <div class="comment-list">
+        @if (TempData["Comments"] != null)
+        {
+            try
+            {
+                var commentsJson = TempData["Comments"] as string;
+                if (!string.IsNullOrEmpty(commentsJson))
+                {
+                    @using Newtonsoft.Json
+                    var comments = JsonConvert.DeserializeObject<List<Comment>>(commentsJson);
+                    if (comments != null && comments.Any())
+                    {
+                        foreach (var comment in comments)
+                        {
+                            <div class="comment">
+                                <p><strong>@comment.UserName</strong></p>
+                                <p>@comment.UserComment</p>
+                                <hr />
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p>No comments yet. Be the first to comment!</p>
+                    }
+                }
+            }
+            catch
+            {
+                <p>Error loading comments.</p>
+            }
+        }
+        else
+        {
+            <p>No comments yet. Be the first to comment!</p>
+        }
+    </div>
+</div>
+        </div>
+
+        <!-- Chart.js Initialization Script -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var homeScores = [
+                    @game.lineScore.home.Q1,
+                    @game.lineScore.home.Q2,
+                    @game.lineScore.home.Q3,
+                    @game.lineScore.home.Q4
+                ];
+                var awayScores = [
+                    @game.lineScore.away.Q1,
+                    @game.lineScore.away.Q2,
+                    @game.lineScore.away.Q3,
+                    @game.lineScore.away.Q4
+                ];
+
+                var ctx = document.getElementById('quarterlyScoreChart_@game.gameID').getContext('2d');
+                if (ctx) {
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                            datasets: [
+                                {
+                                    label: '@game.home Team',
+                                    data: homeScores,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: '@game.away Team',
+                                    data: awayScores,
+                                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Quarterly Scores'
+                                },
+                                legend: {
+                                    position: 'top',
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Points'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Quarter'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        </script>
+    }
+</body>
+</html>

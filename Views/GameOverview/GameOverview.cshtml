@@ -1,0 +1,315 @@
+@model List<Project.Models.GameDetails>
+@{
+    ViewData["Title"] = "Game Overview";
+    Layout = "_Layout";
+}
+
+<style>
+    .header-container {
+        background-color: #f8f9fa;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .season-header {
+        max-width: 1200px;
+        margin: 0 auto;
+        text-align: center;
+        padding: 0 1rem;
+    }
+
+    .season-title {
+        color: #013369;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .season-nav {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .week-selector {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .nav-button {
+        padding: 0.5rem 1rem;
+        background-color: #013369;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .nav-button:hover {
+        background-color: #D50A0A;
+    }
+
+    .nav-button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
+
+    .week-display {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #013369;
+        min-width: 200px;
+        text-align: center;
+    }
+
+    .game-card {
+        max-width: 900px;
+        margin: 16px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .game-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .flex-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .game-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding-right: 300px;
+    }
+
+    .team-container {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-width: 200px;
+    }
+
+    .team-container.away {
+        justify-content: flex-end;
+    }
+
+    .team-logo {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .team-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .score-container {
+        text-align: center;
+    }
+
+    .team-name {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .team-score {
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .vs-text {
+        font-weight: 600;
+        color: #666;
+        margin: 0 20px;
+    }
+
+    .right-content {
+        position: absolute;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .winner-text {
+        font-weight: 600;
+        color: crimson;
+        margin-right: 15px;
+    }
+
+    .details-button {
+        background-color: crimson;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+        text-decoration: none;
+    }
+
+    .details-button:hover {
+        background-color: #b01030;
+    }
+
+    @@media (max-width: 768px) {
+        .season-nav {
+            flex-direction: column;
+        }
+
+        .week-selector {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .game-content {
+            padding-right: 0;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .right-content {
+            position: static;
+            margin-top: 1rem;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .details-button {
+            width: 100%;
+            text-align: center;
+        }
+
+        .team-container {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="header-container">
+    <div class="season-header">
+        <h1 class="season-title">NFL Season @ViewBag.CurrentSeason</h1>
+        <div class="season-nav">
+            <div class="week-selector">
+                <button class="nav-button" onclick="navigateWeek(@ViewBag.CurrentGameWeek - 1, @ViewBag.CurrentSeason)" 
+                        @(ViewBag.CurrentGameWeek <= 1 ? "disabled" : "")>
+                    Previous Week
+                </button>
+                <div class="week-display">Week @ViewBag.CurrentGameWeek</div>
+                <button class="nav-button" onclick="navigateWeek(@ViewBag.CurrentGameWeek + 1, @ViewBag.CurrentSeason)"
+                        @(ViewBag.CurrentGameWeek >= 18 ? "disabled" : "")>
+                    Next Week
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var game in Model)
+        {
+            <div class="game-card">
+                <div class="flex-container">
+                    <div class="game-content">
+                        <!-- Home Team -->
+                        <div class="team-container">
+                            @{
+                                var teamFlags = ViewBag.TeamFlags as List<TeamFlags>;
+                                var homeTeamFlag = teamFlags?.FirstOrDefault(f => f.teamID == game.teamIDHome);
+                            }
+                            <div class="team-logo">
+                                @if (homeTeamFlag != null)
+                                {
+                                    <img src="@homeTeamFlag.nflComLogo1" alt="@game.home">
+                                }
+                            </div>
+                            <div class="score-container">
+                                <div class="team-name">@game.home</div>
+                                <div class="team-score">@game.homePts</div>
+                            </div>
+                        </div>
+
+                        <!-- VS -->
+                        <div class="vs-text">vs</div>
+
+                        <!-- Away Team -->
+                        <div class="team-container away">
+                            <div class="score-container">
+                                <div class="team-name">@game.away</div>
+                                <div class="team-score">@game.awayPts</div>
+                            </div>
+                            @{
+                                var awayTeamFlag = teamFlags?.FirstOrDefault(f => f.teamID == game.teamIDAway);
+                            }
+                            <div class="team-logo">
+                                @if (awayTeamFlag != null)
+                                {
+                                    <img src="@awayTeamFlag.nflComLogo1" alt="@game.away">
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right content: Winner text and Details button -->
+                    <div class="right-content">
+                        <div class="winner-text">
+                            @{
+                                string winnerText = "";
+                                if (int.TryParse(game.homePts, out int homeScore) && 
+                                    int.TryParse(game.awayPts, out int awayScore))
+                                {
+                                    winnerText = homeScore > awayScore 
+                                        ? $"{game.home} Won" 
+                                        : $"{game.away} Won";
+                                }
+                            }
+                            @winnerText
+                        </div>
+                        <a href="@Url.Action("GameInDetail", "GameInDepth", new { gameId = game.gameID })" 
+                           class="details-button">
+                            View Game Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="game-card">
+            <p style="text-align: center; padding: 20px;">No games found for this week.</p>
+        </div>
+    }
+</div>
+
+<script>
+    function navigateWeek(week, season) {
+        if (week >= 1 && week <= 18) {
+            window.location.href = '@Url.Action("GameOverview", "GameOverview")?gameWeek=' + week + '&season=' + season;
+        }
+    }
+</script>
