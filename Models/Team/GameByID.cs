@@ -31,6 +31,7 @@ namespace Project.Models
 
     public class Away
     {
+        public string passingYards {get;set;}
         public string totalYards { get; set; }
         public string rushingAttempts { get; set; }
         public string rushingYards { get; set; }
@@ -46,6 +47,7 @@ namespace Project.Models
 
     public class Home
     {
+        public string passingYards {get;set;}
         public string totalYards { get; set; }
         public string rushingAttempts { get; set; }
         public string rushingYards { get; set; }
